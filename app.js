@@ -17,8 +17,25 @@ const notesCol = collection(db, 'notes');
 
 // ─── Constants ───────────────────────────────────────
 const WALL_SIZE      = 4000;
-const NOTE_CLASSES   = ['note-cream', 'note-rose', 'note-sage', 'note-blue', 'note-lavender', 'note-gold'];
 const DRAG_THRESHOLD = 4;
+
+// Map colorKey → CSS class. Also used for fallback from old numeric style field.
+const COLOR_KEYS   = ['cream', 'rose', 'sage', 'blue', 'lavender', 'gold'];
+const NOTE_CLASSES = {
+  cream:    'note-cream',
+  rose:     'note-rose',
+  sage:     'note-sage',
+  blue:     'note-blue',
+  lavender: 'note-lavender',
+  gold:     'note-gold',
+};
+
+function colorClass(note) {
+  // New notes store colorKey string; old notes stored a numeric style index
+  if (note.colorKey && NOTE_CLASSES[note.colorKey]) return NOTE_CLASSES[note.colorKey];
+  if (typeof note.style === 'number') return NOTE_CLASSES[COLOR_KEYS[note.style % COLOR_KEYS.length]];
+  return 'note-cream';
+}
 
 // ─── State ───────────────────────────────────────────
 const state = {
@@ -36,7 +53,8 @@ const state = {
   maxZ: 100,
   isOnline: true,
   modalOpen: false,
-  detailOpen: false
+  detailOpen: false,
+  selectedColor: 'cream'   // tracks chosen swatch in modal
 };
 
 let pinchState = {};
@@ -66,6 +84,7 @@ const modalCloseBtn = $('modalCloseBtn');
 const detailCloseBtn = $('detailCloseBtn');
 const nameError     = $('nameError');
 const msgError      = $('msgError');
+const colorSwatches = $('colorSwatches');
 
 // ─── Helpers ─────────────────────────────────────────
 function escapeHtml(text) {
@@ -116,6 +135,8 @@ function setMode(mode) {
     btnAdd.textContent = '✕ Cancel';
     btnAdd.classList.add('active');
     viewport.classList.add('placing');
+    ghost.className = `note ghost note-${state.selectedColor}`;
+    ghost.style.setProperty('--r', '0deg');
     ghost.classList.remove('hidden');
     placeHint.classList.remove('hidden');
   } else {
@@ -133,7 +154,7 @@ function renderNote(note, animate = false) {
 
   const el = document.createElement('div');
   el.id = note.id;
-  el.className = 'note ' + NOTE_CLASSES[note.style % NOTE_CLASSES.length];
+  el.className = 'note ' + colorClass(note);
   el.style.left = note.x + 'px';
   el.style.top  = note.y + 'px';
   el.style.setProperty('--r', (note.rotation || 0) + 'deg');
@@ -188,7 +209,9 @@ function initFirestore() {
         const note = {
           id, x: data.x, y: data.y,
           name: data.name, message: data.message,
-          for: data.for || '', style: data.style || 0,
+          for: data.for || '',
+          colorKey: data.colorKey || null,
+          style: data.style ?? 0,          // kept for backward compat
           rotation: data.rotation || 0,
           date: data.createdAt?.toDate?.().toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
@@ -388,6 +411,10 @@ function openModal(x, y) {
   inputMessage.classList.remove('input-error');
   ghost.classList.add('hidden');
   placeHint.classList.add('hidden');
+
+  // Reset to default color
+  selectColor('cream');
+
   // Double rAF gives iOS time to settle before focusing
   requestAnimationFrame(() => {
     requestAnimationFrame(() => inputName.focus());
@@ -429,7 +456,7 @@ async function submitNote() {
     await addDoc(notesCol, {
       x: state.pendingX, y: state.pendingY,
       name, message, for: forPerson,
-      style: Math.floor(Math.random() * NOTE_CLASSES.length),
+      colorKey: state.selectedColor,
       rotation: (Math.random() - 0.5) * 5,
       createdAt: serverTimestamp()
     });
@@ -449,14 +476,41 @@ modalCloseBtn.addEventListener('click', closeModal);
 btnCancel.addEventListener('click', closeModal);
 btnSubmit.addEventListener('click', submitNote);
 
+// ─── Color Swatch Selection ───────────────────────────
+function selectColor(colorKey) {
+  state.selectedColor = colorKey;
+  // Update active swatch highlight
+  colorSwatches.querySelectorAll('.swatch').forEach((s) => {
+    s.classList.toggle('active', s.dataset.color === colorKey);
+  });
+  // Update ghost color live
+  ghost.className = `note ghost note-${colorKey}`;
+  ghost.style.setProperty('--r', '0deg');
+}
+
+colorSwatches.addEventListener('click', (e) => {
+  const swatch = e.target.closest('.swatch');
+  if (swatch) selectColor(swatch.dataset.color);
+});
+
+// ─── Live Ghost Preview ───────────────────────────────
+function updateGhostPreview() {
+  const name    = inputName.value.trim() || 'Your Name';
+  const message = inputMessage.value.trim() || 'Your message...';
+  ghost.querySelector('.note-name').textContent    = name;
+  ghost.querySelector('.note-message').textContent = message;
+}
+
 inputName.addEventListener('input', () => {
   nameError.classList.remove('visible');
   inputName.classList.remove('input-error');
+  updateGhostPreview();
 });
 inputMessage.addEventListener('input', () => {
   charCount.textContent = inputMessage.value.length;
   msgError.classList.remove('visible');
   inputMessage.classList.remove('input-error');
+  updateGhostPreview();
 });
 
 // Close on backdrop click
@@ -481,7 +535,7 @@ function openDetail(note) {
   $('detailMessage').textContent = note.message;
   $('detailFor').textContent     = note.for ? `For ${note.for}` : '';
   $('detailDate').textContent    = note.date;
-  detailCard.className = 'detail-card ' + NOTE_CLASSES[note.style % NOTE_CLASSES.length];
+  detailCard.className = 'detail-card ' + colorClass(note);
   detailCard.style.setProperty('--r', (note.rotation || 0) + 'deg');
   detailOverlay.classList.remove('hidden');
 }
@@ -522,5 +576,4 @@ document.addEventListener('keydown', (e) => {
 // ─── Boot ─────────────────────────────────────────────
 initView();
 initFirestore();
-
 
