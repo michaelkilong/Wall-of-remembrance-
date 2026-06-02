@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
+  /* ─── Reset ─── */
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --gold: #C9A96E;
@@ -31,23 +32,25 @@
     color: var(--text);
     height: 100%;
     width: 100%;
-    touch-action: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Ambient particles */
+  /* ─── Ambient Particles ─── */
   #particles {
     position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.35;
   }
 
-  /* Viewport & Wall */
+  /* ─── Viewport ─── */
   #viewport {
     position: fixed; inset: 0; overflow: hidden; z-index: 2;
-    cursor: grab; background: radial-gradient(circle at 50% 30%, rgba(201,169,110,0.03) 0%, transparent 60%);
+    cursor: grab; touch-action: none;
+    background: radial-gradient(circle at 50% 30%, rgba(201,169,110,0.03) 0%, transparent 60%);
   }
   #viewport.panning { cursor: grabbing; }
   #viewport.placing { cursor: crosshair; }
+
+  /* ─── Wall ─── */
   #wall {
     position: absolute;
     width: 4000px; height: 4000px;
@@ -63,7 +66,7 @@
       radial-gradient(circle at 75% 75%, rgba(201,169,110,0.015) 0%, transparent 50%);
   }
 
-  /* Empty State */
+  /* ─── Empty State ─── */
   .empty-state {
     position: absolute; left: 50%; top: 50%;
     transform: translate(-50%, -50%);
@@ -76,12 +79,12 @@
   }
   .empty-state p { font-size: 0.9rem; color: rgba(232,228,220,0.15); font-weight: 300; }
 
-  /* Notes */
+  /* ─── Notes ─── */
   .note {
     position: absolute; width: 220px; padding: 22px;
     transform: translate(-50%, -50%) rotate(var(--r, 0deg));
     cursor: pointer; user-select: none; border-radius: 3px;
-    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease, z-index 0s;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.35s ease;
     will-change: left, top;
     box-shadow: 0 3px 12px rgba(0,0,0,0.25);
   }
@@ -119,7 +122,7 @@
   }
   .note.animating { animation: noteAppear 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-  /* Ghost */
+  /* ─── Ghost (placement preview) ─── */
   .ghost {
     position: fixed; left: 0; top: 0; pointer-events: none; opacity: 0.55; z-index: 99999;
     transform: translate(-50%, -50%); transition: none;
@@ -127,7 +130,7 @@
   }
   .ghost.hidden { display: none !important; }
 
-  /* UI */
+  /* ─── UI Layer ─── */
   .ui {
     position: fixed; inset: 0; pointer-events: none; z-index: 10000;
     display: flex; flex-direction: column; justify-content: space-between; padding: 28px;
@@ -168,7 +171,7 @@
   }
   .place-hint.hidden { display: none !important; }
 
-  /* Loader */
+  /* ─── Loader ─── */
   .loader {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: 36px; height: 36px; border: 2px solid rgba(201,169,110,0.15);
@@ -177,7 +180,7 @@
   }
   .loader.hidden { display: none !important; }
 
-  /* Overlays */
+  /* ─── Overlays ─── */
   .overlay {
     position: fixed; inset: 0; background: rgba(13,11,9,0.7); backdrop-filter: blur(16px);
     display: flex; align-items: center; justify-content: center; z-index: 20000;
@@ -186,11 +189,13 @@
   .overlay:not(.hidden) { opacity: 1; pointer-events: auto; }
   .overlay.hidden { display: none; }
 
+  /* ─── Modal ─── */
   .modal {
     background: #F5F1E8; border-radius: 16px; padding: 36px; width: 90%; max-width: 460px;
     box-shadow: 0 24px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,169,110,0.1);
     position: relative; transform: translateY(15px) scale(0.97);
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    touch-action: auto;
   }
   .overlay:not(.hidden) .modal { transform: translateY(0) scale(1); }
   .modal-close {
@@ -206,12 +211,12 @@
   .form-group input, .form-group textarea {
     width: 100%; padding: 11px 14px; border: 1.5px solid #D5D0C8; border-radius: 10px;
     font-family: 'Inter', sans-serif; font-size: 0.95rem; background: white; color: #2C2C2C;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s; touch-action: auto;
   }
   .form-group input:focus, .form-group textarea:focus {
     outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.12);
   }
-  .form-group textarea { min-height: 100px; resize: vertical; }
+  .form-group textarea { min-height: 100px; resize: vertical; touch-action: auto; }
   .char-count { text-align: right; font-size: 0.78rem; color: #bbb; margin-top: 4px; }
   .input-error { border-color: var(--error) !important; }
   .error-text { color: var(--error); font-size: 0.78rem; margin-top: 4px; display: none; }
@@ -225,7 +230,7 @@
   .btn-primary:active { transform: translateY(0); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  /* Detail Card */
+  /* ─── Detail Card ─── */
   .detail-card {
     width: 90%; max-width: 480px; padding: 40px; position: relative;
     box-shadow: 0 24px 70px rgba(0,0,0,0.4); border-radius: 3px;
@@ -245,7 +250,7 @@
     border-radius: 2px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
 
-  /* Toasts */
+  /* ─── Toasts ─── */
   .toast-container {
     position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 30000;
     display: flex; flex-direction: column; gap: 8px; pointer-events: none;
@@ -260,7 +265,7 @@
   .toast.error { border-color: rgba(231,76,60,0.3); color: #ffaaa5; }
   .toast.success { border-color: rgba(39,174,96,0.3); color: #a8e6cf; }
 
-  /* Animations */
+  /* ─── Animations ─── */
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -322,37 +327,37 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <div id="modalOverlay" class="overlay hidden">
-  <div class="modal">
-    <button class="modal-close" onclick="App.closeModal()" aria-label="Close">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" id="modalCloseBtn" aria-label="Close">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2>Write a Note</h2>
     <p>Share a memory, a thought, or a tribute.</p>
     <div class="form-group">
       <label for="inputName">Your Name</label>
-      <input type="text" id="inputName" maxlength="50" placeholder="Enter your name" autocomplete="off">
+      <input type="text" id="inputName" maxlength="50" placeholder="Enter your name" autocomplete="off" spellcheck="false">
       <div class="error-text" id="nameError">Please enter your name</div>
     </div>
     <div class="form-group">
       <label for="inputFor">This note is for (optional)</label>
-      <input type="text" id="inputFor" maxlength="50" placeholder="Who are you remembering?" autocomplete="off">
+      <input type="text" id="inputFor" maxlength="50" placeholder="Who are you remembering?" autocomplete="off" spellcheck="false">
     </div>
     <div class="form-group">
       <label for="inputMessage">Your Message</label>
-      <textarea id="inputMessage" maxlength="500" placeholder="Write your note here..."></textarea>
+      <textarea id="inputMessage" maxlength="500" placeholder="Write your note here..." spellcheck="false"></textarea>
       <div class="char-count"><span id="charCount">0</span>/500</div>
       <div class="error-text" id="msgError">Please write a message</div>
     </div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
-      <button class="btn-primary" id="btnSubmit" onclick="App.submitNote()">Place on Wall</button>
+      <button class="btn-secondary" id="btnCancel">Cancel</button>
+      <button class="btn-primary" id="btnSubmit">Place on Wall</button>
     </div>
   </div>
 </div>
 
 <div id="detailOverlay" class="overlay hidden">
   <div class="detail-card" id="detailCard" style="--r:0deg;">
-    <button class="detail-close" onclick="App.closeDetail()" aria-label="Close">×</button>
+    <button class="detail-close" id="detailCloseBtn" aria-label="Close">×</button>
     <div class="detail-name" id="detailName"></div>
     <div class="detail-message" id="detailMessage"></div>
     <div class="detail-for" id="detailFor"></div>
@@ -367,8 +372,8 @@
    *  1. Create a Firebase project at https://console.firebase.google.com
    *  2. Enable Firestore Database
    *  3. Copy your web app config and paste it below
-   *  4. Set Firestore security rules (see bottom of this file)
-   *  5. Deploy to Vercel / GitHub Pages
+   *  4. Set Firestore security rules
+   *  5. Deploy to Vercel / GitHub Pages / any static host
    */
 
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -377,41 +382,52 @@
   // ═══════════════════════════════════════════════════════
   //  REPLACE WITH YOUR FIREBASE CONFIG
   // ═══════════════════════════════════════════════════════
- 
- const firebaseConfig = {
-    apiKey: "AIzaSyCRJp2flDog01jfuvQMMwgwgsSFhaUvXS4",
-    authDomain: "wall-of-remembrance.firebaseapp.com",
-    projectId: "wall-of-remembrance",
-    storageBucket: "wall-of-remembrance.firebasestorage.app",
-    messagingSenderId: "966159517137",
-    appId: "1:966159517137:web:99738eca1e55a56bda0cf0"
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
- 
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const notesCol = collection(db, 'notes');
 
   // ═══════════════════════════════════════════════════════
-  //  STATE
+  //  CONSTANTS
   // ═══════════════════════════════════════════════════════
   const WALL_SIZE = 4000;
   const NOTE_CLASSES = ['note-cream','note-rose','note-sage','note-blue','note-lavender','note-gold'];
+  const DRAG_THRESHOLD = 4; // pixels
 
+  // ═══════════════════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════════════════
   const state = {
     scale: 0.25, tx: 0, ty: 0,
-    mode: 'navigate',
-    isPanning: false, isDraggingNote: false,
-    draggedNoteId: null, dragStartX: 0, dragStartY: 0,
-    panStartX: 0, panStartY: 0, noteStartX: 0, noteStartY: 0,
-    hasDragged: false, pendingX: 0, pendingY: 0,
-    notes: new Map(), rendered: new Set(), maxZ: 100,
-    isOnline: true
+    mode: 'navigate', // 'navigate' | 'place'
+    isPanning: false,
+    isDraggingNote: false,
+    draggedNoteId: null,
+    dragStartX: 0, dragStartY: 0,
+    panStartX: 0, panStartY: 0,
+    noteStartX: 0, noteStartY: 0,
+    hasDragged: false,
+    pendingX: 0, pendingY: 0,
+    notes: new Map(),      // id -> note object
+    rendered: new Set(),   // ids already in DOM
+    maxZ: 100,
+    isOnline: true,
+    modalOpen: false,
+    detailOpen: false
   };
 
   let pinchState = {};
 
   // ═══════════════════════════════════════════════════════
-  //  DOM HELPERS
+  //  DOM REFS
   // ═══════════════════════════════════════════════════════
   const $ = (id) => document.getElementById(id);
   const viewport = $('viewport');
@@ -431,18 +447,33 @@
   const inputMessage = $('inputMessage');
   const charCount = $('charCount');
   const btnSubmit = $('btnSubmit');
+  const btnCancel = $('btnCancel');
+  const modalCloseBtn = $('modalCloseBtn');
+  const detailCloseBtn = $('detailCloseBtn');
   const nameError = $('nameError');
   const msgError = $('msgError');
+  const canvas = $('particles');
+  const ctx = canvas.getContext('2d');
 
   // ═══════════════════════════════════════════════════════
-  //  TOAST SYSTEM
+  //  UTILITIES
   // ═══════════════════════════════════════════════════════
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+
   function toast(message, type = 'info') {
     const el = document.createElement('div');
     el.className = `toast ${type}`;
     el.textContent = message;
     toastContainer.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
+  }
+
+  function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
   }
 
   // ═══════════════════════════════════════════════════════
@@ -450,19 +481,19 @@
   // ═══════════════════════════════════════════════════════
   function initView() {
     const vw = window.innerWidth, vh = window.innerHeight;
-    state.scale = Math.max(0.15, Math.min(0.4, Math.min(vw, vh) / WALL_SIZE * 0.9));
+    state.scale = clamp(Math.min(vw, vh) / WALL_SIZE * 0.9, 0.15, 0.4);
     state.tx = (vw - WALL_SIZE * state.scale) / 2;
     state.ty = (vh - WALL_SIZE * state.scale) / 2;
     updateTransform();
   }
 
   function updateTransform() {
-    wall.style.transform = `translate3d(${state.tx}px, ${state.ty}px, 0) scale(${state.scale})`;
+    wall.style.transform = `translate3d(${state.tx.toFixed(2)}px, ${state.ty.toFixed(2)}px, 0) scale(${state.scale.toFixed(4)})`;
     zoomDisplay.textContent = Math.round(state.scale * 100) + '%';
   }
 
   function zoomTo(newScale, mx, my) {
-    const clamped = Math.max(0.1, Math.min(2.5, newScale));
+    const clamped = clamp(newScale, 0.1, 2.5);
     const wx = (mx - state.tx) / state.scale;
     const wy = (my - state.ty) / state.scale;
     state.scale = clamped;
@@ -491,12 +522,6 @@
   // ═══════════════════════════════════════════════════════
   //  NOTE RENDERING
   // ═══════════════════════════════════════════════════════
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-  }
-
   function renderNote(note, animate = false) {
     if (state.rendered.has(note.id)) return;
     state.rendered.add(note.id);
@@ -516,8 +541,8 @@
     el.innerHTML = html;
 
     el.addEventListener('mousedown', (e) => {
-      if (state.mode === 'place' || e.button !== 0) return;
-      e.stopPropagation(); e.preventDefault();
+      if (state.mode === 'place' || e.button !== 0 || state.modalOpen || state.detailOpen) return;
+      e.stopPropagation();
       state.isDraggingNote = true;
       state.draggedNoteId = note.id;
       state.hasDragged = false;
@@ -531,7 +556,9 @@
     });
 
     wall.appendChild(el);
-    if (animate) el.classList.add('animating');
+    if (animate) {
+      requestAnimationFrame(() => el.classList.add('animating'));
+    }
   }
 
   function bringToFront(el) {
@@ -544,7 +571,7 @@
   }
 
   // ═══════════════════════════════════════════════════════
-  //  FIRESTORE REAL-TIME SYNC
+  //  FIRESTORE SYNC
   // ═══════════════════════════════════════════════════════
   function initFirestore() {
     loader.classList.remove('hidden');
@@ -552,10 +579,9 @@
     onSnapshot(notesCol, (snapshot) => {
       loader.classList.add('hidden');
       snapshot.docChanges().forEach((change) => {
-        const data = change.doc.data();
-        const id = change.doc.id;
-
         if (change.type === 'added') {
+          const data = change.doc.data();
+          const id = change.doc.id;
           const note = {
             id, x: data.x, y: data.y,
             name: data.name, message: data.message,
@@ -577,12 +603,11 @@
   }
 
   // ═══════════════════════════════════════════════════════
-  //  INPUT HANDLING
+  //  VIEWPORT INTERACTION (Mouse)
   // ═══════════════════════════════════════════════════════
   viewport.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || state.modalOpen || state.detailOpen) return;
     if (e.target.closest('.note')) return;
-    if (e.target.closest('.ui')) return;
     state.isPanning = true;
     state.hasDragged = false;
     state.dragStartX = e.clientX;
@@ -596,7 +621,7 @@
     if (state.isPanning) {
       const dx = e.clientX - state.dragStartX;
       const dy = e.clientY - state.dragStartY;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.hasDragged = true;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) state.hasDragged = true;
       state.tx = state.panStartX + dx;
       state.ty = state.panStartY + dy;
       updateTransform();
@@ -604,16 +629,16 @@
     if (state.isDraggingNote) {
       const dx = e.clientX - state.dragStartX;
       const dy = e.clientY - state.dragStartY;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.hasDragged = true;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) state.hasDragged = true;
       const note = state.notes.get(state.draggedNoteId);
       if (note) {
         note.x = state.noteStartX + dx / state.scale;
         note.y = state.noteStartY + dy / state.scale;
-        const el = $(note.id);
+        const el = document.getElementById(note.id);
         if (el) { el.style.left = note.x + 'px'; el.style.top = note.y + 'px'; }
       }
     }
-    if (state.mode === 'place') {
+    if (state.mode === 'place' && !state.modalOpen && !state.detailOpen) {
       ghost.style.left = e.clientX + 'px';
       ghost.style.top = e.clientY + 'px';
     }
@@ -625,12 +650,14 @@
       viewport.classList.remove('panning');
     }
     if (state.isDraggingNote) {
-      const el = $(state.draggedNoteId);
+      const el = document.getElementById(state.draggedNoteId);
       if (el) { el.classList.remove('dragging'); el.style.transition = ''; }
       state.isDraggingNote = false;
       state.draggedNoteId = null;
     }
-    if (!state.hasDragged) {
+
+    // Only process clicks when no overlay is open
+    if (!state.hasDragged && !state.modalOpen && !state.detailOpen) {
       const noteEl = e.target.closest('.note');
       if (noteEl) {
         const note = state.notes.get(noteEl.id);
@@ -644,14 +671,21 @@
     state.hasDragged = false;
   });
 
+  // ═══════════════════════════════════════════════════════
+  //  VIEWPORT INTERACTION (Wheel)
+  // ═══════════════════════════════════════════════════════
   viewport.addEventListener('wheel', (e) => {
+    if (state.modalOpen || state.detailOpen) return;
     e.preventDefault();
     const factor = e.deltaY > 0 ? 0.92 : 1.08;
     zoomTo(state.scale * factor, e.clientX, e.clientY);
   }, { passive: false });
 
-  // Touch
+  // ═══════════════════════════════════════════════════════
+  //  VIEWPORT INTERACTION (Touch)
+  // ═══════════════════════════════════════════════════════
   viewport.addEventListener('touchstart', (e) => {
+    if (state.modalOpen || state.detailOpen) return;
     if (e.touches.length === 2) {
       e.preventDefault();
       const t1 = e.touches[0], t2 = e.touches[1];
@@ -677,12 +711,13 @@
   }, { passive: false });
 
   viewport.addEventListener('touchmove', (e) => {
+    if (state.modalOpen || state.detailOpen) return;
     if (e.touches.length === 2 && pinchState.startDistance) {
       e.preventDefault();
       const t1 = e.touches[0], t2 = e.touches[1];
       const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
       const factor = dist / pinchState.startDistance;
-      const newScale = Math.max(0.1, Math.min(2.5, pinchState.startScale * factor));
+      const newScale = clamp(pinchState.startScale * factor, 0.1, 2.5);
       const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
       state.scale = newScale;
       state.tx = center.x - pinchState.wallAnchorX * newScale;
@@ -693,7 +728,7 @@
       const t = e.touches[0];
       const dx = t.clientX - state.dragStartX;
       const dy = t.clientY - state.dragStartY;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.hasDragged = true;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) state.hasDragged = true;
       state.tx = state.panStartX + dx;
       state.ty = state.panStartY + dy;
       updateTransform();
@@ -704,7 +739,7 @@
     if (e.touches.length < 2) pinchState = {};
     if (e.touches.length === 0) {
       state.isPanning = false;
-      if (!state.hasDragged && state.mode === 'place') {
+      if (!state.hasDragged && state.mode === 'place' && !state.modalOpen && !state.detailOpen) {
         const t = e.changedTouches[0];
         if (t && !t.target.closest('.ui')) {
           const wx = (t.clientX - state.tx) / state.scale;
@@ -723,36 +758,47 @@
   // ═══════════════════════════════════════════════════════
   //  UI CONTROLS
   // ═══════════════════════════════════════════════════════
-  btnAdd.addEventListener('click', () => setMode(state.mode === 'place' ? 'navigate' : 'place'));
-  $('btnZoomIn').addEventListener('click', () => zoomTo(state.scale * 1.3, window.innerWidth / 2, window.innerHeight / 2));
-  $('btnZoomOut').addEventListener('click', () => zoomTo(state.scale * 0.7, window.innerWidth / 2, window.innerHeight / 2));
-  $('btnReset').addEventListener('click', () => initView());
-
-  inputMessage.addEventListener('input', () => {
-    charCount.textContent = inputMessage.value.length;
-    msgError.classList.remove('visible');
-    inputMessage.classList.remove('input-error');
+  btnAdd.addEventListener('click', () => {
+    if (state.modalOpen || state.detailOpen) return;
+    setMode(state.mode === 'place' ? 'navigate' : 'place');
   });
-  inputName.addEventListener('input', () => {
-    nameError.classList.remove('visible');
-    inputName.classList.remove('input-error');
+
+  $('btnZoomIn').addEventListener('click', () => {
+    if (state.modalOpen || state.detailOpen) return;
+    zoomTo(state.scale * 1.3, window.innerWidth / 2, window.innerHeight / 2);
+  });
+
+  $('btnZoomOut').addEventListener('click', () => {
+    if (state.modalOpen || state.detailOpen) return;
+    zoomTo(state.scale * 0.7, window.innerWidth / 2, window.innerHeight / 2);
+  });
+
+  $('btnReset').addEventListener('click', () => {
+    if (state.modalOpen || state.detailOpen) return;
+    initView();
   });
 
   // ═══════════════════════════════════════════════════════
-  //  MODAL & FORM
+  //  MODAL SYSTEM
   // ═══════════════════════════════════════════════════════
   function openModal(x, y) {
     state.pendingX = x; state.pendingY = y;
+    state.modalOpen = true;
     modalOverlay.classList.remove('hidden');
     inputName.value = ''; inputFor.value = ''; inputMessage.value = '';
     charCount.textContent = '0';
     nameError.classList.remove('visible'); msgError.classList.remove('visible');
     inputName.classList.remove('input-error'); inputMessage.classList.remove('input-error');
-    inputName.focus();
     ghost.classList.add('hidden');
+    placeHint.classList.add('hidden');
+    // Focus after transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => inputName.focus());
+    });
   }
 
   function closeModal() {
+    state.modalOpen = false;
     modalOverlay.classList.add('hidden');
     if (state.mode === 'place') setMode('navigate');
   }
@@ -765,7 +811,11 @@
 
     if (!name) { nameError.classList.add('visible'); inputName.classList.add('input-error'); hasError = true; }
     if (!message) { msgError.classList.add('visible'); inputMessage.classList.add('input-error'); hasError = true; }
-    if (hasError) return;
+    if (hasError) {
+      if (!name) inputName.focus();
+      else inputMessage.focus();
+      return;
+    }
 
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Placing...';
@@ -789,10 +839,41 @@
     }
   }
 
+  modalCloseBtn.addEventListener('click', closeModal);
+  btnCancel.addEventListener('click', closeModal);
+  btnSubmit.addEventListener('click', submitNote);
+
+  // Form validation cleanup on input
+  inputName.addEventListener('input', () => {
+    nameError.classList.remove('visible');
+    inputName.classList.remove('input-error');
+  });
+  inputMessage.addEventListener('input', () => {
+    charCount.textContent = inputMessage.value.length;
+    msgError.classList.remove('visible');
+    inputMessage.classList.remove('input-error');
+  });
+
+  // Prevent modal clicks from bubbling to viewport
+  modalOverlay.addEventListener('mousedown', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+  $('modalBox').addEventListener('mousedown', (e) => e.stopPropagation());
+  $('modalBox').addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+
+  // Enter key in form
+  inputMessage.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitNote();
+    }
+  });
+
   // ═══════════════════════════════════════════════════════
   //  DETAIL VIEW
   // ═══════════════════════════════════════════════════════
   function openDetail(note) {
+    state.detailOpen = true;
     $('detailName').textContent = note.name;
     $('detailMessage').textContent = note.message;
     $('detailFor').textContent = note.for ? `For ${note.for}` : '';
@@ -803,33 +884,45 @@
   }
 
   function closeDetail() {
+    state.detailOpen = false;
     detailOverlay.classList.add('hidden');
   }
+
+  detailCloseBtn.addEventListener('click', closeDetail);
+  detailOverlay.addEventListener('mousedown', (e) => {
+    if (e.target === detailOverlay) closeDetail();
+  });
+  detailCard.addEventListener('mousedown', (e) => e.stopPropagation());
+  detailCard.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 
   // ═══════════════════════════════════════════════════════
   //  KEYBOARD SHORTCUTS
   // ═══════════════════════════════════════════════════════
   document.addEventListener('keydown', (e) => {
+    // Only handle shortcuts when no text input is focused
+    const activeTag = document.activeElement?.tagName;
+    const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+
     if (e.key === 'Escape') {
-      if (!modalOverlay.classList.contains('hidden')) closeModal();
-      else if (!detailOverlay.classList.contains('hidden')) closeDetail();
+      if (state.modalOpen) closeModal();
+      else if (state.detailOpen) closeDetail();
       else if (state.mode === 'place') setMode('navigate');
+      return;
     }
+
+    if (isTyping) return; // Don't intercept typing characters
+
     if (e.key === '+' || e.key === '=') {
-      zoomTo(Math.min(2.5, state.scale * 1.2), window.innerWidth / 2, window.innerHeight / 2);
-    }
-    if (e.key === '-') {
-      zoomTo(Math.max(0.1, state.scale * 0.8), window.innerWidth / 2, window.innerHeight / 2);
+      zoomTo(clamp(state.scale * 1.2, 0.1, 2.5), window.innerWidth / 2, window.innerHeight / 2);
+    } else if (e.key === '-') {
+      zoomTo(clamp(state.scale * 0.8, 0.1, 2.5), window.innerWidth / 2, window.innerHeight / 2);
     }
   });
 
   // ═══════════════════════════════════════════════════════
   //  AMBIENT PARTICLES
   // ═══════════════════════════════════════════════════════
-  const canvas = $('particles');
-  const ctx = canvas.getContext('2d');
   let particles = [];
-
   function initParticles() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -843,7 +936,6 @@
       });
     }
   }
-
   function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const time = Date.now() * 0.001;
@@ -857,8 +949,9 @@
     });
     requestAnimationFrame(animateParticles);
   }
-
-  window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  });
 
   // ═══════════════════════════════════════════════════════
   //  INIT
@@ -867,8 +960,6 @@
   animateParticles();
   initView();
   initFirestore();
-
-  window.App = { openModal, closeModal, submitNote, openDetail, closeDetail };
 
   /*
    *  FIRESTORE SECURITY RULES
