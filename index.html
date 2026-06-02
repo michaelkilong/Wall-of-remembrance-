@@ -8,7 +8,7 @@
   <title>Diary Dump</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -88,6 +88,18 @@
       </div>
 
       <div class="form-group">
+        <label>Note Colour</label>
+        <div class="color-swatches" id="colorSwatches">
+          <button type="button" class="swatch swatch-cream active"  data-color="cream"   aria-label="Cream"   title="Cream"></button>
+          <button type="button" class="swatch swatch-rose"          data-color="rose"    aria-label="Rose"    title="Rose"></button>
+          <button type="button" class="swatch swatch-sage"          data-color="sage"    aria-label="Sage"    title="Sage"></button>
+          <button type="button" class="swatch swatch-blue"          data-color="blue"    aria-label="Blue"    title="Blue"></button>
+          <button type="button" class="swatch swatch-lavender"      data-color="lavender" aria-label="Lavender" title="Lavender"></button>
+          <button type="button" class="swatch swatch-gold"          data-color="gold"    aria-label="Gold"    title="Gold"></button>
+        </div>
+      </div>
+
+      <div class="form-group">
         <label for="inputMessage">Your Message</label>
         <textarea
           id="inputMessage"
@@ -122,4 +134,4 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
-
+  
