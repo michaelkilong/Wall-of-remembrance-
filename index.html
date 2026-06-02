@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="A place to dump your intrusive thoughts. Leave a note, share a memory, honor someone.">
+<meta name="description" content="A living wall of remembrance. Leave a note, share a memory, honor someone. No sign-in required.">
 <meta name="theme-color" content="#0D0B09">
-<title>Diary Dump</title>
+<title>Wall of Remembrance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link hreYearf="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-  /* ─── Reset ─── */
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --gold: #C9A96E;
@@ -28,7 +27,7 @@
   html, body {
     font-family: 'Inter', sans-serif;
     overflow: hidden;
-    background: var(--bg);
+    background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #0D0B09 50%, #0a0a1f 100%);
     color: var(--text);
     height: 100%;
     width: 100%;
@@ -36,16 +35,10 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* ─── Ambient Particles ─── */
-  #particles {
-    position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.35;
-  }
-
   /* ─── Viewport ─── */
   #viewport {
     position: fixed; inset: 0; overflow: hidden; z-index: 2;
     cursor: grab; touch-action: none;
-    background: radial-gradient(circle at 50% 30%, rgba(201,169,110,0.03) 0%, transparent 60%);
   }
   #viewport.panning { cursor: grabbing; }
   #viewport.placing { cursor: crosshair; }
@@ -122,7 +115,7 @@
   }
   .note.animating { animation: noteAppear 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-  /* ─── Ghost (placement preview) ─── */
+  /* ─── Ghost ─── */
   .ghost {
     position: fixed; left: 0; top: 0; pointer-events: none; opacity: 0.55; z-index: 99999;
     transform: translate(-50%, -50%); transition: none;
@@ -130,7 +123,7 @@
   }
   .ghost.hidden { display: none !important; }
 
-  /* ─── UI Layer ─── */
+  /* ─── UI ─── */
   .ui {
     position: fixed; inset: 0; pointer-events: none; z-index: 10000;
     display: flex; flex-direction: column; justify-content: space-between;
@@ -200,8 +193,7 @@
     box-shadow: 0 24px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,169,110,0.1);
     position: relative; transform: translateY(15px) scale(0.97);
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    pointer-events: auto;
-    touch-action: auto;
+    pointer-events: auto; touch-action: auto;
   }
   .overlay:not(.hidden) .modal { transform: translateY(0) scale(1); }
   .modal-close {
@@ -299,8 +291,6 @@
 </head>
 <body>
 
-<canvas id="particles"></canvas>
-
 <div id="viewport">
   <div id="wall">
     <div class="wall-texture"></div>
@@ -319,8 +309,8 @@
 
 <div class="ui">
   <div class="header">
-    <h1>Diary Dump</h1>
-    <p>Write iy down, let it go. Someone will find it someday</p>
+    <h1>Wall of Remembrance</h1>
+    <p>Drag to pan · Scroll to zoom · Click to leave a note</p>
   </div>
   <div class="place-hint hidden" id="placeHint">Click anywhere on the wall to place your note</div>
   <div class="toolbar">
@@ -384,16 +374,10 @@
   const db = getFirestore(app);
   const notesCol = collection(db, 'notes');
 
-  // ═══════════════════════════════════════════════════════
-  //  CONSTANTS
-  // ═══════════════════════════════════════════════════════
   const WALL_SIZE = 4000;
   const NOTE_CLASSES = ['note-cream','note-rose','note-sage','note-blue','note-lavender','note-gold'];
   const DRAG_THRESHOLD = 4;
 
-  // ═══════════════════════════════════════════════════════
-  //  STATE
-  // ═══════════════════════════════════════════════════════
   const state = {
     scale: 0.25, tx: 0, ty: 0,
     mode: 'navigate',
@@ -414,9 +398,6 @@
 
   let pinchState = {};
 
-  // ═══════════════════════════════════════════════════════
-  //  DOM REFS
-  // ═══════════════════════════════════════════════════════
   const $ = (id) => document.getElementById(id);
   const viewport = $('viewport');
   const wall = $('wall');
@@ -440,12 +421,7 @@
   const detailCloseBtn = $('detailCloseBtn');
   const nameError = $('nameError');
   const msgError = $('msgError');
-  const canvas = $('particles');
-  const ctx = canvas.getContext('2d');
 
-  // ═══════════════════════════════════════════════════════
-  //  UTILITIES
-  // ═══════════════════════════════════════════════════════
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text || '';
@@ -464,9 +440,6 @@
     return Math.max(min, Math.min(max, val));
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  VIEWPORT & CAMERA
-  // ═══════════════════════════════════════════════════════
   function initView() {
     const vw = window.innerWidth, vh = window.innerHeight;
     state.scale = clamp(Math.min(vw, vh) / WALL_SIZE * 0.9, 0.15, 0.4);
@@ -507,11 +480,8 @@
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  NOTE RENDERING
-  // ═══════════════════════════════════════════════════════
   function renderNote(note, animate = false) {
-    if (document.getElementById(note.id)) return; // already in DOM
+    if (document.getElementById(note.id)) return;
 
     const el = document.createElement('div');
     el.id = note.id;
@@ -557,9 +527,6 @@
     emptyState.style.display = state.notes.size > 0 ? 'none' : 'block';
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  FIRESTORE SYNC
-  // ═══════════════════════════════════════════════════════
   function initFirestore() {
     loader.classList.remove('hidden');
 
@@ -589,9 +556,6 @@
     });
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  VIEWPORT INTERACTION (Mouse)
-  // ═══════════════════════════════════════════════════════
   viewport.addEventListener('mousedown', (e) => {
     if (e.button !== 0 || state.modalOpen || state.detailOpen) return;
     if (e.target.closest('.note')) return;
@@ -657,9 +621,6 @@
     state.hasDragged = false;
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  VIEWPORT INTERACTION (Wheel)
-  // ═══════════════════════════════════════════════════════
   viewport.addEventListener('wheel', (e) => {
     if (state.modalOpen || state.detailOpen) return;
     e.preventDefault();
@@ -667,9 +628,6 @@
     zoomTo(state.scale * factor, e.clientX, e.clientY);
   }, { passive: false });
 
-  // ═══════════════════════════════════════════════════════
-  //  VIEWPORT INTERACTION (Touch)
-  // ═══════════════════════════════════════════════════════
   viewport.addEventListener('touchstart', (e) => {
     if (state.modalOpen || state.detailOpen) return;
     if (e.touches.length === 2) {
@@ -741,9 +699,6 @@
     if (!e.target.closest('.note')) e.preventDefault();
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  UI CONTROLS
-  // ═══════════════════════════════════════════════════════
   btnAdd.addEventListener('click', () => {
     if (state.modalOpen || state.detailOpen) return;
     setMode(state.mode === 'place' ? 'navigate' : 'place');
@@ -764,9 +719,6 @@
     initView();
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  MODAL SYSTEM
-  // ═══════════════════════════════════════════════════════
   function openModal(x, y) {
     state.pendingX = x; state.pendingY = y;
     state.modalOpen = true;
@@ -851,9 +803,6 @@
     }
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  DETAIL VIEW
-  // ═══════════════════════════════════════════════════════
   function openDetail(note) {
     state.detailOpen = true;
     $('detailName').textContent = note.name;
@@ -877,9 +826,6 @@
   detailCard.addEventListener('mousedown', (e) => e.stopPropagation());
   detailCard.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 
-  // ═══════════════════════════════════════════════════════
-  //  KEYBOARD SHORTCUTS
-  // ═══════════════════════════════════════════════════════
   document.addEventListener('keydown', (e) => {
     const activeTag = document.activeElement?.tagName;
     const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
@@ -900,45 +846,6 @@
     }
   });
 
-  // ═══════════════════════════════════════════════════════
-  //  AMBIENT PARTICLES
-  // ═══════════════════════════════════════════════════════
-  let particles = [];
-  function initParticles() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    particles = [];
-    for (let i = 0; i < 60; i++) {
-      particles.push({
-        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
-        size: Math.random() * 2 + 0.5, alpha: Math.random() * 0.5 + 0.1,
-        phase: Math.random() * Math.PI * 2
-      });
-    }
-  }
-  function animateParticles() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const time = Date.now() * 0.001;
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
-      if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
-      const a = p.alpha * (0.6 + 0.4 * Math.sin(time * 0.5 + p.phase));
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(201, 169, 110, ${a})`; ctx.fill();
-    });
-    requestAnimationFrame(animateParticles);
-  }
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  });
-
-  // ═══════════════════════════════════════════════════════
-  //  INIT
-  // ═══════════════════════════════════════════════════════
-  initParticles();
-  animateParticles();
   initView();
   initFirestore();
 
